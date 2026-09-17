@@ -50,6 +50,11 @@ Without an active middleware the output is identical to django-pipeline's.
 
 `request` must be in the template context (`django.template.context_processors.request`).
 
+The tag must render before the CSP middleware writes the response header — normal template rendering already
+satisfies this. Accessing the nonce after the header was written raises `CSPNonceError` with django-csp; with
+Django's built-in CSP a late nonce is simply not included in the header and the scripts it was meant to allow are
+blocked. This matters mainly for streaming responses, where content can be produced after the headers are sent.
+
 ## Not covered
 
 - Jinja2 templates
