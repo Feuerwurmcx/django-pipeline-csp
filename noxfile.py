@@ -3,26 +3,29 @@ import nox
 nox.options.default_venv_backend = "uv"
 nox.options.sessions = ["lint", "tests"]
 
-# Nur Kombinationen, die Django selbst unterstuetzt. django-pipeline 4.0 laeuft
-# nicht mit Django >= 5.2: PipelineFinder.find() kennt das Keyword "find_all"
-# nicht, das Django seit 5.2 uebergibt (in django-pipeline 4.1 behoben).
+# Nur Kombinationen, die Django selbst unterstuetzt. django-pipeline kommt aus
+# der Abhaengigkeit (>=4.1,<5).
 COMBINATIONS = [
-    ("3.10", "4.2", "4.0"),
-    ("3.10", "4.2", "4.1"),
-    ("3.11", "4.2", "4.0"),
-    ("3.11", "4.2", "4.1"),
-    ("3.12", "4.2", "4.0"),
-    ("3.12", "4.2", "4.1"),
-    ("3.10", "5.2", "4.1"),
-    ("3.11", "5.2", "4.1"),
-    ("3.12", "5.2", "4.1"),
-    ("3.13", "5.2", "4.1"),
-    ("3.12", "6.0", "4.1"),
-    ("3.13", "6.0", "4.1"),
-    ("3.14", "6.0", "4.1"),
-    ("3.12", "6.1", "4.1"),
-    ("3.13", "6.1", "4.1"),
-    ("3.14", "6.1", "4.1"),
+    ("3.10", "4.2"),
+    ("3.11", "4.2"),
+    ("3.12", "4.2"),
+    ("3.10", "5.0"),
+    ("3.11", "5.0"),
+    ("3.12", "5.0"),
+    ("3.10", "5.1"),
+    ("3.11", "5.1"),
+    ("3.12", "5.1"),
+    ("3.13", "5.1"),
+    ("3.10", "5.2"),
+    ("3.11", "5.2"),
+    ("3.12", "5.2"),
+    ("3.13", "5.2"),
+    ("3.12", "6.0"),
+    ("3.13", "6.0"),
+    ("3.14", "6.0"),
+    ("3.12", "6.1"),
+    ("3.13", "6.1"),
+    ("3.14", "6.1"),
 ]
 
 
@@ -33,8 +36,8 @@ def lint(session):
 
 
 @nox.session
-@nox.parametrize("python,django,pipeline", COMBINATIONS)
-def tests(session, django, pipeline):
-    session.install("-e", ".[test]", f"django~={django}.0", f"django-pipeline~={pipeline}.0")
+@nox.parametrize("python,django", COMBINATIONS)
+def tests(session, django):
+    session.install("-e", ".[test]", f"django~={django}.0")
     session.run("coverage", "run", "-m", "pytest", *session.posargs)
     session.run("coverage", "report")

@@ -64,8 +64,7 @@ blocked. This matters mainly for streaming responses, where content can be produ
 
 ## Compatibility
 
-Python 3.10–3.14, Django 4.2 / 5.2 / 6.0 / 6.1, django-pipeline 4.0 (Django 4.2 only) / 4.1. django-pipeline 4.0 does
-not work with Django >= 5.2 (upstream), so use 4.1 there.
+Python 3.10–3.14, Django 4.2 / 5.0 / 5.1 / 5.2 / 6.0 / 6.1, django-pipeline >= 4.1.
 
 ## License
 

@@ -10,5 +10,5 @@
 
 ### Notes
 
-- Tested against Django 4.2, 5.2, 6.0 and 6.1.
-- django-pipeline 4.0 only works with Django 4.2; use django-pipeline 4.1 for Django >= 5.2.
+- Requires django-pipeline >= 4.1.
+- Tested against Django 4.2, 5.0, 5.1, 5.2, 6.0 and 6.1.
