@@ -13,8 +13,10 @@ except ImportError:  # pragma: no cover - nur unter Django < 6.0
     _django_get_nonce = None
 
 # `<script` als Tag-Anfang, dessen Attribute noch kein `nonce=` enthalten.
+# `(?=[\s>/])` verlangt Whitespace, `>` oder `/` direkt nach `script` (statt
+# einer Wortgrenze), damit `<script-widget>` (Custom Element) nicht matcht.
 # `\s` vor `nonce=` haelt `data-nonce=` auseinander.
-_SCRIPT_WITHOUT_NONCE = re.compile(r"<script\b(?![^>]*\snonce=)", re.IGNORECASE)
+_SCRIPT_WITHOUT_NONCE = re.compile(r"<script(?=[\s>/])(?![^>]*\snonce=)", re.IGNORECASE)
 
 
 def get_nonce(request: HttpRequest | None) -> str | None:
@@ -36,6 +38,11 @@ def get_nonce(request: HttpRequest | None) -> str | None:
     return str(lazy) or None
 
 
-def add_nonce(html: str, nonce: str) -> str:
-    """Setzt `nonce="<nonce>"` in jeden `<script`-Tag ohne eigenes Nonce."""
-    return _SCRIPT_WITHOUT_NONCE.sub(f'<script nonce="{escape(nonce)}"', html)
+def add_nonce(html: str, nonce: str, *, count: int = 0) -> str:
+    """Setzt `nonce="<nonce>"` in `<script`-Tags ohne eigenes Nonce.
+
+    `count` wird an `re.sub` durchgereicht: `0` (Default) ersetzt alle
+    Treffer, `1` nur den ersten (z.B. um nur das aeussere `<script>` eines
+    Inline-Blocks zu treffen, ohne dessen Textinhalt zu untersuchen).
+    """
+    return _SCRIPT_WITHOUT_NONCE.sub(f'<script nonce="{escape(nonce)}"', html, count=count)

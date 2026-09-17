@@ -1,4 +1,5 @@
 import pytest
+from django.template import engines
 from django.test import Client
 
 from tests.conftest import header_nonce, html_nonces
@@ -68,3 +69,69 @@ def test_stylesheet_ueber_pipeline_csp(csp):
     body = Client().get("/css/").content.decode()
 
     assert '<link href="/static/css/base.css" rel="stylesheet"' in body
+
+
+def test_jst_mit_script_im_quelltext_bleibt_unveraendert(csp, pipeline_enabled):
+    """Regression fuer F1: der Inhalt des Inline-Scripts (JST-Quelltext) darf
+    nicht als eigener `<script>`-Tag behandelt werden, auch wenn er `<script`
+    enthaelt. Eigenes Paket/Template, damit die bestehende JST-Fixture und
+    `test_jst_inline_skript_bekommt_nonce` unveraendert bleiben.
+    """
+    pipeline_enabled(False)
+
+    response = Client().get("/jst_with_script/")
+
+    body = response.content.decode()
+    nonce = header_nonce(response)
+    assert '<script type="text/template"></script>' in body
+    assert html_nonces(response) == [nonce]
+
+
+def test_render_error_js_bekommt_nonce_nur_am_aeusseren_tag(csp, pipeline_enabled, settings):
+    pipeline_enabled(False)
+    settings.PIPELINE = {
+        **settings.PIPELINE,
+        "SHOW_ERRORS_INLINE": True,
+        "COMPILERS": ["tests.compilers.FailingCompiler"],
+    }
+
+    response = Client().get("/broken/")
+
+    body = response.content.decode()
+    nonce = header_nonce(response)
+    assert "kaputt" in body
+    assert html_nonces(response) == [nonce]
+
+
+def test_jst_mit_script_im_quelltext_ohne_middleware_kein_nonce(settings, pipeline_enabled):
+    settings.MIDDLEWARE = []
+    pipeline_enabled(False)
+
+    body = Client().get("/jst_with_script/").content.decode()
+
+    assert '<script type="text/template"></script>' in body
+    assert "nonce" not in body
+
+
+def test_render_error_js_ohne_middleware_kein_nonce(settings, pipeline_enabled):
+    settings.MIDDLEWARE = []
+    pipeline_enabled(False)
+    settings.PIPELINE = {
+        **settings.PIPELINE,
+        "SHOW_ERRORS_INLINE": True,
+        "COMPILERS": ["tests.compilers.FailingCompiler"],
+    }
+
+    body = Client().get("/broken/").content.decode()
+
+    assert "kaputt" in body
+    assert "nonce" not in body
+
+
+def test_javascript_ohne_request_im_context_hat_kein_nonce(pipeline_enabled):
+    pipeline_enabled(False)
+    django_template = engines["django"].from_string('{% load pipeline_csp %}{% javascript "polyfills" %}')
+
+    html = django_template.render({})
+
+    assert "nonce" not in html

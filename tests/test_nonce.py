@@ -87,3 +87,17 @@ def test_add_nonce_aendert_anderes_markup_nicht():
     html = '<link href="/a.css" rel="stylesheet"><scripts></scripts>'
 
     assert add_nonce(html, "abc") == html
+
+
+def test_add_nonce_laesst_custom_elements_unveraendert():
+    """F3: `<script\\b` matcht auch `<script-widget>`; die Grenze muss auf
+    Whitespace, `>` oder `/` geprueft werden, nicht auf einer Wortgrenze."""
+    html = "<script-widget></script-widget>"
+
+    assert add_nonce(html, "abc") == html
+
+
+def test_add_nonce_count_eins_setzt_nur_das_erste_script():
+    html = '<script src="/a.js"></script><script src="/b.js"></script>'
+
+    assert add_nonce(html, "abc", count=1) == ('<script nonce="abc" src="/a.js"></script><script src="/b.js"></script>')

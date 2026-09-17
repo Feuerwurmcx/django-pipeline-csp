@@ -44,6 +44,17 @@ PIPELINE = {
             "source_filenames": ["jst/*.jst"],
             "output_filename": "js/templates.js",
         },
+        # Eigenes Verzeichnis (nicht "jst/"), damit das Glob-Pattern
+        # "jst/*.jst" des "templates"-Pakets diese Fixture nicht mit erfasst
+        # und `test_jst_inline_skript_bekommt_nonce` unveraendert bleibt.
+        "templates_with_script": {
+            "source_filenames": ["jst_with_script/*.jst"],
+            "output_filename": "js/templates_with_script.js",
+        },
+        "broken": {
+            "source_filenames": ["broken/*.fail"],
+            "output_filename": "js/broken.js",
+        },
     },
     "STYLESHEETS": {
         "base": {
