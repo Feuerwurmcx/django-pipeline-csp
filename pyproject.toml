@@ -1,0 +1,93 @@
+[project]
+name = "pipeline-csp"
+version = "0.1.0"
+description = "CSP nonce support for django-pipeline script tags"
+authors = [{ name = "Christian Bergmann", email = "christian.bergmann@cnbg-n.com" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Security",
+]
+dependencies = [
+    "django>=4.2",
+    "django-pipeline>=4.0,<5",
+]
+
+[project.optional-dependencies]
+django-csp = ["django-csp>=4.0"]
+test = [
+    "pytest>=8",
+    "pytest-django>=4.9",
+    "coverage[toml]>=7",
+    "django-csp>=4.0",
+]
+dev = [
+    "pipeline-csp[test]",
+    "nox",
+    "ruff~=0.15.0",
+    "bump-my-version",
+]
+
+[project.urls]
+Homepage = "https://github.com/Feuerwurmcx/pipeline-csp"
+Issues = "https://github.com/Feuerwurmcx/pipeline-csp/issues"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"
+
+[tool.coverage.run]
+source = ["pipeline_csp"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 95
+
+[tool.bumpversion]
+current_version = "0.1.0"
+allow_dirty = false
+commit = true
+tag = true
+tag_name = "v{new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "src/pipeline_csp/__init__.py"
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'
