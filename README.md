@@ -1,1 +1,1 @@
-# pipeline-csp
+# django-pipeline-csp

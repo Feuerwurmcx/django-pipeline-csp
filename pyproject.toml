@@ -1,5 +1,5 @@
 [project]
-name = "pipeline-csp"
+name = "django-pipeline-csp"
 version = "0.1.0"
 description = "CSP nonce support for django-pipeline script tags"
 authors = [{ name = "Christian Bergmann", email = "christian.bergmann@cnbg-n.com" }]
@@ -37,15 +37,15 @@ test = [
     "django-csp>=4.0",
 ]
 dev = [
-    "pipeline-csp[test]",
+    "django-pipeline-csp[test]",
     "nox",
     "ruff~=0.15.0",
     "bump-my-version",
 ]
 
 [project.urls]
-Homepage = "https://github.com/Feuerwurmcx/pipeline-csp"
-Issues = "https://github.com/Feuerwurmcx/pipeline-csp/issues"
+Homepage = "https://github.com/Feuerwurmcx/django-pipeline-csp"
+Issues = "https://github.com/Feuerwurmcx/django-pipeline-csp/issues"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
