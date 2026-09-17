@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8.2.0
+      - run: uvx ruff@0.15 check src tests
+      - run: uvx ruff@0.15 format --check src tests
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pipeline: ["4.0", "4.1"]
+        combo:
+          - { django: "4.2", python: "3.10" }
+          - { django: "4.2", python: "3.11" }
+          - { django: "4.2", python: "3.12" }
+          - { django: "5.2", python: "3.10" }
+          - { django: "5.2", python: "3.11" }
+          - { django: "5.2", python: "3.12" }
+          - { django: "5.2", python: "3.13" }
+          - { django: "6.0", python: "3.12" }
+          - { django: "6.0", python: "3.13" }
+          - { django: "6.0", python: "3.14" }
+    name: py${{ matrix.combo.python }} / Django ${{ matrix.combo.django }} / pipeline ${{ matrix.pipeline }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.combo.python }}
+      - run: pip install -e ".[test]" "django~=${{ matrix.combo.django }}.0" "django-pipeline~=${{ matrix.pipeline }}.0"
+      - run: coverage run -m pytest -q
+      - run: coverage report
