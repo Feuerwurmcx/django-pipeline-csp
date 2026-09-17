@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -33,6 +36,9 @@ jobs:
           - { django: "6.0", python: "3.12", pipeline: "4.1" }
           - { django: "6.0", python: "3.13", pipeline: "4.1" }
           - { django: "6.0", python: "3.14", pipeline: "4.1" }
+          - { django: "6.1", python: "3.12", pipeline: "4.1" }
+          - { django: "6.1", python: "3.13", pipeline: "4.1" }
+          - { django: "6.1", python: "3.14", pipeline: "4.1" }
     name: py${{ matrix.combo.python }} / Django ${{ matrix.combo.django }} / pipeline ${{ matrix.combo.pipeline }}
     steps:
       - uses: actions/checkout@v7
@@ -42,3 +48,28 @@ jobs:
       - run: pip install -e ".[test]" "django~=${{ matrix.combo.django }}.0" "django-pipeline~=${{ matrix.combo.pipeline }}.0"
       - run: coverage run -m pytest -q
       - run: coverage report
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8.2.0
+      - name: Build sdist and wheel
+        run: uv build
+      - name: Check metadata
+        run: uvx twine check dist/*
+      - name: Smoke-install the built wheel
+        # django-pipeline itself reads Django settings (PIPELINE, DEBUG) at
+        # import time, so even a bare `import pipeline_csp...` needs Django
+        # settings configured first -- this is upstream django-pipeline
+        # behaviour, not specific to this package.
+        run: |
+          uv venv /tmp/smoke
+          uv pip install --python /tmp/smoke dist/*.whl
+          /tmp/smoke/bin/python -c "
+          import django
+          from django.conf import settings
+          settings.configure(INSTALLED_APPS=['django.contrib.staticfiles', 'pipeline', 'pipeline_csp'], STATIC_URL='/static/', PIPELINE={})
+          import pipeline_csp.templatetags.pipeline_csp
+          print('import OK')
+          "

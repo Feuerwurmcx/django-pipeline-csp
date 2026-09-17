@@ -6,6 +6,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build distribution
@@ -17,6 +20,21 @@ jobs:
         run: uv build
       - name: Check metadata
         run: uvx twine check dist/*
+      - name: Smoke-install the built wheel
+        # django-pipeline itself reads Django settings (PIPELINE, DEBUG) at
+        # import time, so even a bare `import pipeline_csp...` needs Django
+        # settings configured first -- this is upstream django-pipeline
+        # behaviour, not specific to this package.
+        run: |
+          uv venv /tmp/smoke
+          uv pip install --python /tmp/smoke dist/*.whl
+          /tmp/smoke/bin/python -c "
+          import django
+          from django.conf import settings
+          settings.configure(INSTALLED_APPS=['django.contrib.staticfiles', 'pipeline', 'pipeline_csp'], STATIC_URL='/static/', PIPELINE={})
+          import pipeline_csp.templatetags.pipeline_csp
+          print('import OK')
+          "
       - uses: actions/upload-artifact@v7
         with:
           name: dist

@@ -3,7 +3,8 @@ name = "django-pipeline-csp"
 version = "0.1.0"
 description = "CSP nonce support for django-pipeline script tags"
 authors = [{ name = "Christian Bergmann", email = "christian.bergmann@cnbg-n.com" }]
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -13,8 +14,8 @@ classifiers = [
     "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.2",
     "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -48,7 +49,7 @@ Homepage = "https://github.com/Feuerwurmcx/django-pipeline-csp"
 Issues = "https://github.com/Feuerwurmcx/django-pipeline-csp/issues"
 
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

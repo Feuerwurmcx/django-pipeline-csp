@@ -9,3 +9,4 @@ dist/
 .nox/
 .coverage
 .idea/
+.superpowers/
