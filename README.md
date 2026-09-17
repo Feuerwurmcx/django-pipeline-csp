@@ -59,7 +59,8 @@ Without an active middleware the output is identical to django-pipeline's.
 
 ## Compatibility
 
-Python 3.10–3.14, Django 4.2 / 5.2 / 6.0, django-pipeline 4.0 / 4.1.
+Python 3.10–3.14, Django 4.2 / 5.2 / 6.0, django-pipeline 4.0 (Django 4.2 only) / 4.1. django-pipeline 4.0 does not
+work with Django >= 5.2 (upstream), so use 4.1 there.
 
 ## License
 

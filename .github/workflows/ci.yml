@@ -19,24 +19,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pipeline: ["4.0", "4.1"]
         combo:
-          - { django: "4.2", python: "3.10" }
-          - { django: "4.2", python: "3.11" }
-          - { django: "4.2", python: "3.12" }
-          - { django: "5.2", python: "3.10" }
-          - { django: "5.2", python: "3.11" }
-          - { django: "5.2", python: "3.12" }
-          - { django: "5.2", python: "3.13" }
-          - { django: "6.0", python: "3.12" }
-          - { django: "6.0", python: "3.13" }
-          - { django: "6.0", python: "3.14" }
-    name: py${{ matrix.combo.python }} / Django ${{ matrix.combo.django }} / pipeline ${{ matrix.pipeline }}
+          - { django: "4.2", python: "3.10", pipeline: "4.0" }
+          - { django: "4.2", python: "3.10", pipeline: "4.1" }
+          - { django: "4.2", python: "3.11", pipeline: "4.0" }
+          - { django: "4.2", python: "3.11", pipeline: "4.1" }
+          - { django: "4.2", python: "3.12", pipeline: "4.0" }
+          - { django: "4.2", python: "3.12", pipeline: "4.1" }
+          - { django: "5.2", python: "3.10", pipeline: "4.1" }
+          - { django: "5.2", python: "3.11", pipeline: "4.1" }
+          - { django: "5.2", python: "3.12", pipeline: "4.1" }
+          - { django: "5.2", python: "3.13", pipeline: "4.1" }
+          - { django: "6.0", python: "3.12", pipeline: "4.1" }
+          - { django: "6.0", python: "3.13", pipeline: "4.1" }
+          - { django: "6.0", python: "3.14", pipeline: "4.1" }
+    name: py${{ matrix.combo.python }} / Django ${{ matrix.combo.django }} / pipeline ${{ matrix.combo.pipeline }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.combo.python }}
-      - run: pip install -e ".[test]" "django~=${{ matrix.combo.django }}.0" "django-pipeline~=${{ matrix.pipeline }}.0"
+      - run: pip install -e ".[test]" "django~=${{ matrix.combo.django }}.0" "django-pipeline~=${{ matrix.combo.pipeline }}.0"
       - run: coverage run -m pytest -q
       - run: coverage report
