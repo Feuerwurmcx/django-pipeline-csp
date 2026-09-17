@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8.2.0
+      - run: uvx ruff@0.15 check src tests
+      - run: uvx ruff@0.15 format --check src tests
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        combo:
+          - { django: "4.2", python: "3.10" }
+          - { django: "4.2", python: "3.11" }
+          - { django: "4.2", python: "3.12" }
+          - { django: "5.0", python: "3.10" }
+          - { django: "5.0", python: "3.11" }
+          - { django: "5.0", python: "3.12" }
+          - { django: "5.1", python: "3.10" }
+          - { django: "5.1", python: "3.11" }
+          - { django: "5.1", python: "3.12" }
+          - { django: "5.1", python: "3.13" }
+          - { django: "5.2", python: "3.10" }
+          - { django: "5.2", python: "3.11" }
+          - { django: "5.2", python: "3.12" }
+          - { django: "5.2", python: "3.13" }
+          - { django: "6.0", python: "3.12" }
+          - { django: "6.0", python: "3.13" }
+          - { django: "6.0", python: "3.14" }
+          - { django: "6.1", python: "3.12" }
+          - { django: "6.1", python: "3.13" }
+          - { django: "6.1", python: "3.14" }
+    name: py${{ matrix.combo.python }} / Django ${{ matrix.combo.django }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.combo.python }}
+      - run: pip install -e ".[test]" "django~=${{ matrix.combo.django }}.0"
+      - run: coverage run -m pytest -q
+      - run: coverage report
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8.2.0
+      - name: Build sdist and wheel
+        run: uv build
+      - name: Check metadata
+        run: uvx twine check dist/*
+      - name: Smoke-install the built wheel
+        # django-pipeline itself reads Django settings (PIPELINE, DEBUG) at
+        # import time, so even a bare `import pipeline_csp...` needs Django
+        # settings configured first -- this is upstream django-pipeline
+        # behaviour, not specific to this package.
+        run: |
+          uv venv /tmp/smoke
+          uv pip install --python /tmp/smoke dist/*.whl
+          /tmp/smoke/bin/python -c "
+          import django
+          from django.conf import settings
+          settings.configure(INSTALLED_APPS=['django.contrib.staticfiles', 'pipeline', 'pipeline_csp'], STATIC_URL='/static/', PIPELINE={})
+          import pipeline_csp.templatetags.pipeline_csp
+          print('import OK')
+          "
