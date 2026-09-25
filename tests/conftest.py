@@ -6,6 +6,7 @@ from csp.constants import NONCE
 
 NONCE_IN_HEADER = re.compile(r"'nonce-([^']+)'")
 NONCE_IN_HTML = re.compile(r'<script nonce="([^"]+)"')
+NONCE_IN_LINK = re.compile(r'<link nonce="([^"]+)"')
 
 
 @pytest.fixture(params=["django-csp", "django"])
@@ -17,10 +18,18 @@ def csp(request, settings):
         from django.utils.csp import CSP
 
         settings.MIDDLEWARE = ["django.middleware.csp.ContentSecurityPolicyMiddleware"]
-        settings.SECURE_CSP = {"script-src": [CSP.SELF, CSP.NONCE, CSP.STRICT_DYNAMIC]}
+        settings.SECURE_CSP = {
+            "script-src": [CSP.SELF, CSP.NONCE, CSP.STRICT_DYNAMIC],
+            "style-src": [CSP.SELF, CSP.NONCE],
+        }
     else:
         settings.MIDDLEWARE = ["csp.middleware.CSPMiddleware"]
-        settings.CONTENT_SECURITY_POLICY = {"DIRECTIVES": {"script-src": ["'self'", NONCE, "'strict-dynamic'"]}}
+        settings.CONTENT_SECURITY_POLICY = {
+            "DIRECTIVES": {
+                "script-src": ["'self'", NONCE, "'strict-dynamic'"],
+                "style-src": ["'self'", NONCE],
+            }
+        }
     return request.param
 
 
@@ -48,3 +57,7 @@ def header_nonce(response):
 
 def html_nonces(response):
     return NONCE_IN_HTML.findall(response.content.decode())
+
+
+def link_nonces(response):
+    return NONCE_IN_LINK.findall(response.content.decode())

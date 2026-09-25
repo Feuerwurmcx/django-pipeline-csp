@@ -1,7 +1,7 @@
 [project]
 name = "django-pipeline-csp"
 version = "0.2.0"
-description = "CSP nonce support for django-pipeline script tags"
+description = "CSP nonce support for django-pipeline script and stylesheet tags"
 authors = [{ name = "Christian Bergmann", email = "christian.bergmann@cnbg-n.com" }]
 license = "MIT"
 license-files = ["LICENSE"]

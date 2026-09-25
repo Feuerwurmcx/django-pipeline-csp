@@ -7,7 +7,7 @@ from django.test import AsyncClient, Client, RequestFactory
 
 from pipeline_csp.middleware import MediaNonceMiddleware
 from pipeline_csp.nonce import get_nonce
-from tests.conftest import header_nonce, html_nonces
+from tests.conftest import header_nonce, html_nonces, link_nonces
 from tests.forms import MediaForm
 
 requires_script_asset = pytest.mark.skipif(django.VERSION < (5, 2), reason="forms.Script gibt es erst ab Django 5.2")
@@ -43,10 +43,14 @@ def test_middleware_setzt_nonce_in_media_eines_fremden_templates(media_middlewar
     assert "https://cdn.example.com/x.js" in body
 
 
-def test_middleware_laesst_css_unveraendert(media_middleware):
-    body = Client().get("/media/").content.decode()
+def test_middleware_setzt_nonce_in_css(media_middleware):
+    response = Client().get("/media/")
 
-    assert '<link href="/static/css/base.css" media="all" rel="stylesheet">' in body
+    nonce = header_nonce(response)
+    assert (
+        f'<link nonce="{nonce}" href="/static/css/base.css" media="all" rel="stylesheet">' in response.content.decode()
+    )
+    assert link_nonces(response) == [nonce]
 
 
 def test_middleware_setzt_nonce_bei_pipeline_form_media(media_middleware, pipeline_enabled):
@@ -94,13 +98,16 @@ def test_middleware_patcht_nur_einmal(media_middleware):
     Client().get("/media/")
     patched = forms.Media.render_js
 
+    patched_css = forms.Media.render_css
+
     MediaNonceMiddleware(lambda request: None)
 
     assert forms.Media.render_js is patched
+    assert forms.Media.render_css is patched_css
 
 
-def test_media_ohne_js_erzeugt_kein_nonce(media_middleware):
-    media = forms.Media(css={"all": ["css/base.css"]})
+def test_leeres_media_erzeugt_kein_nonce(media_middleware):
+    media = forms.Media()
     request = request_with_nonce(media_middleware)
     if media_middleware == "django":
         from django.middleware.csp import get_nonce as lazy_nonce
@@ -148,12 +155,12 @@ def test_vorhandenes_nonce_aus_media_attrs_bleibt_stehen(media_middleware):
 # --- Filter csp_nonce -----------------------------------------------------------
 
 
-def test_filter_setzt_nonce_nur_in_scripts(csp):
+def test_filter_setzt_nonce_in_scripts_und_css(csp):
     response = Client().get("/media_filter/")
 
-    body = response.content.decode()
-    assert html_nonces(response) == [header_nonce(response)] * 2
-    assert '<link href="/static/css/base.css" media="all" rel="stylesheet">' in body
+    nonce = header_nonce(response)
+    assert html_nonces(response) == [nonce] * 2
+    assert link_nonces(response) == [nonce]
 
 
 def test_filter_behaelt_reihenfolge_von_django(csp):
@@ -174,7 +181,7 @@ def test_filter_und_middleware_setzen_nonce_nur_einmal(media_middleware):
     response = Client().get("/media_filter/")
 
     body = response.content.decode()
-    assert body.count("nonce=") == 2
+    assert body.count("nonce=") == 3
     assert html_nonces(response) == [header_nonce(response)] * 2
 
 

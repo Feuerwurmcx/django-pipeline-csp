@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0] - 2026-09-25
+
+### Added
+
+- `{% stylesheet %}` adds the request's CSP nonce to every `<link>` it renders (source files and bundle); the
+  inline error output gets it on its `<script>`.
+- `MediaNonceMiddleware` and the `csp_nonce` filter also add the nonce to the `<link>` tags of Django `Media`.
+
+### Changed
+
+- `add_nonce()` handles `<link>` and `<style>` tags in addition to `<script>`.
+
 ## [0.2.0] - 2026-09-25
 
 ### Added
