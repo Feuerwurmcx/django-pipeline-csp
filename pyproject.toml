@@ -1,6 +1,6 @@
 [project]
 name = "django-pipeline-csp"
-version = "0.1.0"
+version = "0.2.0"
 description = "CSP nonce support for django-pipeline script tags"
 authors = [{ name = "Christian Bergmann", email = "christian.bergmann@cnbg-n.com" }]
 license = "MIT"
@@ -79,7 +79,7 @@ show_missing = true
 fail_under = 95
 
 [tool.bumpversion]
-current_version = "0.1.0"
+current_version = "0.2.0"
 allow_dirty = false
 commit = true
 tag = true
