@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0] - 2026-09-25
+
+### Added
+
+- `MediaNonceMiddleware` adds the request's CSP nonce to every `<script>` rendered by Django `Media`
+  (`{{ form.media }}`, widget media, `PipelineFormMedia`, the admin), including in third-party templates.
+- `{{ form.media|csp_nonce:request }}` filter for the same per template.
+
 ## [0.1.0] - 2026-09-17
 
 ### Added
