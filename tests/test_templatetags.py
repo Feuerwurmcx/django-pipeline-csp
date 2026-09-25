@@ -2,7 +2,7 @@ import pytest
 from django.template import engines
 from django.test import Client
 
-from tests.conftest import header_nonce, html_nonces
+from tests.conftest import header_nonce, html_nonces, link_nonces
 
 
 @pytest.mark.parametrize("enabled", [False, True])
@@ -65,10 +65,49 @@ def test_ohne_csp_middleware_identisch_zu_django_pipeline(settings, pipeline_ena
     assert b"nonce" not in ours
 
 
-def test_stylesheet_ueber_pipeline_csp(csp):
-    body = Client().get("/css/").content.decode()
+@pytest.mark.parametrize("enabled", [False, True])
+def test_stylesheet_setzt_nonce_des_headers(csp, pipeline_enabled, enabled):
+    pipeline_enabled(enabled)
 
-    assert '<link href="/static/css/base.css" rel="stylesheet"' in body
+    response = Client().get("/css/")
+
+    body = response.content.decode()
+    nonce = header_nonce(response)
+    assert f'<link nonce="{nonce}" href="/static/css/{"base.min" if enabled else "base"}.css" rel="stylesheet"' in body
+    assert link_nonces(response) == [nonce]
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_stylesheet_ohne_csp_middleware_identisch_zu_django_pipeline(settings, pipeline_enabled, enabled):
+    settings.MIDDLEWARE = []
+    pipeline_enabled(enabled)
+
+    ours = Client().get("/css/").content
+    theirs = Client().get("/css_pipeline/").content
+
+    assert ours == theirs
+    assert b"nonce" not in ours
+
+
+def test_render_error_css_bekommt_nonce_nur_am_script(csp, pipeline_enabled, settings):
+    pipeline_enabled(False)
+    settings.PIPELINE = {
+        **settings.PIPELINE,
+        "SHOW_ERRORS_INLINE": True,
+        "COMPILERS": ["tests.compilers.FailingCompiler"],
+    }
+
+    response = Client().get("/broken_css/")
+
+    body = response.content.decode()
+    assert "kaputt" in body
+    assert html_nonces(response) == [header_nonce(response)]
+
+
+def test_stylesheet_ohne_request_im_context_hat_kein_nonce():
+    django_template = engines["django"].from_string('{% load pipeline_csp %}{% stylesheet "base" %}')
+
+    assert "nonce" not in django_template.render({})
 
 
 def test_jst_mit_script_im_quelltext_bleibt_unveraendert(csp, pipeline_enabled):

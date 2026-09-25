@@ -6,10 +6,10 @@ from pipeline_csp.media import _current_request, install
 
 
 class MediaNonceMiddleware:
-    """Setzt das Nonce des Requests in jedes von `Media` gerenderte `<script>`.
+    """Setzt das Nonce des Requests in jedes von `Media` gerenderte `<link>` und `<script>`.
 
     Muss in `MIDDLEWARE` hinter der CSP-Middleware stehen. Beim Laden wird
-    `Media.render_js` einmalig umhuellt; waehrend eines Requests haelt eine
+    `Media.render_css` und `Media.render_js` einmalig umhuellt; waehrend eines Requests haelt eine
     ContextVar den Request, aus dem der Patch das Nonce liest. So bekommen auch
     Templates von Fremdpaketen und das Admin das Nonce, ohne sie anzupassen.
 

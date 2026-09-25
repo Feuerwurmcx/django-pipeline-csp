@@ -61,5 +61,9 @@ PIPELINE = {
             "source_filenames": ["css/base.css"],
             "output_filename": "css/base.min.css",
         },
+        "broken": {
+            "source_filenames": ["broken/x.fail"],
+            "output_filename": "css/broken.css",
+        },
     },
 }

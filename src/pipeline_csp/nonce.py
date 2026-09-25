@@ -1,4 +1,4 @@
-"""Das CSP-Nonce eines Requests lesen und in `<script>`-Tags setzen."""
+"""Das CSP-Nonce eines Requests lesen und in `<script>`-, `<link>`- und `<style>`-Tags setzen."""
 
 from __future__ import annotations
 
@@ -12,11 +12,11 @@ try:  # Django >= 6.0
 except ImportError:  # pragma: no cover - nur unter Django < 6.0
     _django_get_nonce = None
 
-# `<script` als Tag-Anfang, dessen Attribute noch kein `nonce=` enthalten.
-# `(?=[\s>/])` verlangt Whitespace, `>` oder `/` direkt nach `script` (statt
-# einer Wortgrenze), damit `<script-widget>` (Custom Element) nicht matcht.
-# `\s` vor `nonce=` haelt `data-nonce=` auseinander.
-_SCRIPT_WITHOUT_NONCE = re.compile(r"<script(?=[\s>/])(?![^>]*\snonce=)", re.IGNORECASE)
+# `<script`, `<link` oder `<style` als Tag-Anfang, dessen Attribute noch kein
+# `nonce=` enthalten. `(?=[\s>/])` verlangt Whitespace, `>` oder `/` direkt nach
+# dem Tag-Namen (statt einer Wortgrenze), damit `<script-widget>` (Custom
+# Element) nicht matcht. `\s` vor `nonce=` haelt `data-nonce=` auseinander.
+_TAG_WITHOUT_NONCE = re.compile(r"<(script|link|style)(?=[\s>/])(?![^>]*\snonce=)", re.IGNORECASE)
 
 
 def get_nonce(request: HttpRequest | None) -> str | None:
@@ -39,10 +39,11 @@ def get_nonce(request: HttpRequest | None) -> str | None:
 
 
 def add_nonce(html: str, nonce: str, *, count: int = 0) -> str:
-    """Setzt `nonce="<nonce>"` in `<script`-Tags ohne eigenes Nonce.
+    """Setzt `nonce="<nonce>"` in `<script`-, `<link`- und `<style`-Tags ohne eigenes Nonce.
 
     `count` wird an `re.sub` durchgereicht: `0` (Default) ersetzt alle
     Treffer, `1` nur den ersten (z.B. um nur das aeussere `<script>` eines
     Inline-Blocks zu treffen, ohne dessen Textinhalt zu untersuchen).
     """
-    return _SCRIPT_WITHOUT_NONCE.sub(f'<script nonce="{escape(nonce)}"', html, count=count)
+    attr = f' nonce="{escape(nonce)}"'
+    return _TAG_WITHOUT_NONCE.sub(lambda m: f"<{m.group(1)}{attr}", html, count=count)

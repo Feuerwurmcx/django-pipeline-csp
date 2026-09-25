@@ -84,9 +84,23 @@ def test_add_nonce_escaped_den_wert():
 
 
 def test_add_nonce_aendert_anderes_markup_nicht():
-    html = '<link href="/a.css" rel="stylesheet"><scripts></scripts>'
+    html = "<div><scripts></scripts><linked></linked><styles></styles></div>"
 
     assert add_nonce(html, "abc") == html
+
+
+def test_add_nonce_setzt_nonce_in_link_und_style():
+    html = '<link href="/a.css" rel="stylesheet">\n<style>a{}</style>'
+
+    assert add_nonce(html, "abc") == (
+        '<link nonce="abc" href="/a.css" rel="stylesheet">\n<style nonce="abc">a{}</style>'
+    )
+
+
+def test_add_nonce_laesst_vorhandenes_nonce_an_link_stehen():
+    html = '<link nonce="alt" href="/a.css" rel="stylesheet"/>'
+
+    assert add_nonce(html, "neu") == html
 
 
 def test_add_nonce_laesst_custom_elements_unveraendert():
