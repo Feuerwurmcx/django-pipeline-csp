@@ -25,6 +25,13 @@ def csp(request, settings):
 
 
 @pytest.fixture
+def media_middleware(csp, settings):
+    """Haengt `MediaNonceMiddleware` hinter die CSP-Middleware aus `csp`."""
+    settings.MIDDLEWARE = [*settings.MIDDLEWARE, "pipeline_csp.middleware.MediaNonceMiddleware"]
+    return csp
+
+
+@pytest.fixture
 def pipeline_enabled(settings):
     def set_enabled(enabled):
         settings.PIPELINE = {**settings.PIPELINE, "PIPELINE_ENABLED": enabled}

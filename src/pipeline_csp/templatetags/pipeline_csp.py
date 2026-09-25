@@ -8,10 +8,13 @@ fehlt das Nonce ohne Fehlermeldung.
 from contextvars import ContextVar
 
 from django import template
+from django.forms import Media
+from django.http import HttpRequest
 from django.utils.safestring import mark_safe
 from pipeline.templatetags.pipeline import JavascriptNode, stylesheet
 from pipeline.templatetags.pipeline import javascript as pipeline_javascript
 
+from pipeline_csp.media import render_media
 from pipeline_csp.nonce import add_nonce, get_nonce
 
 register = template.Library()
@@ -77,3 +80,19 @@ class NonceJavascriptNode(JavascriptNode):
 @register.tag
 def javascript(parser, token):
     return NonceJavascriptNode(pipeline_javascript(parser, token).name)
+
+
+@register.filter
+def csp_nonce(media, request):
+    """`{{ form.media|csp_nonce:request }}`: Media mit Nonce in allen `<script>`-Tags.
+
+    Fuer Templates, in denen man `{{ form.media }}` selbst schreibt. Fremde
+    Templates deckt `MediaNonceMiddleware` ab. Ohne Media, Request oder Nonce
+    bleibt der Wert unveraendert.
+    """
+    if not isinstance(media, Media) or not isinstance(request, HttpRequest):
+        return media
+    nonce = get_nonce(request)
+    if nonce is None:
+        return media
+    return render_media(media, nonce)
